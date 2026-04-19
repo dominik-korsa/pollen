@@ -22,7 +22,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data_source = data_source::cm_uj::CmUjDataSource::new(
         fetcher
     );
-    let pollen_storage = pollen_storage::null::NullPollenStorage;
+    let pollen_storage = pollen_storage::FilePollenStorage::new(
+        config.pollen_storage_file
+    );
     let state_serializer = state::StateSerializer::new(pollen_storage);
 
     let publisher = MqttPublisher::new(

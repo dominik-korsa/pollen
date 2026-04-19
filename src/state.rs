@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::io;
 use serde::Serialize;
 use crate::data_source::{Pollen, PollenLevel, PollenReport, PollenReportMetadata, Trend};
 use crate::pollen_storage::{generate_id_for_name, PollenStorage};
@@ -70,7 +69,7 @@ impl<S: PollenStorage> StateSerializer<S> {
 
     /// Prepare the report for publishing by including
     /// entity IDs for all previously encountered pollen types.
-    pub fn create_state(&self, report: PollenReport) -> io::Result<State> {
+    pub fn create_state(&self, report: PollenReport) -> Result<State, Box<dyn std::error::Error>> {
         let mut map = self.storage.get_map()?;
         for pollen in &report.pollen_list {
             if map.contains_right(pollen.name.as_str()) {

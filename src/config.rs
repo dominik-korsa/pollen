@@ -19,4 +19,8 @@ pub(crate) struct Config {
     /// Path to a text file containing the MQTT password
     #[arg(long, env = "MQTT_PASSWORD_FILE")]
     pub(crate) password_file: PathBuf,
+
+    /// Path to the pollen storage file
+    #[arg(long, env = "POLLEN_STORAGE_FILE", default_value = "/var/lib/pollen/pollen.json")]
+    pub(crate) pollen_storage_file: PathBuf,
 }
