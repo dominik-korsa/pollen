@@ -5,7 +5,7 @@ use crate::pollen_storage::{generate_id_for_name, PollenStorage};
 
 #[derive(Debug, Serialize)]
 pub struct StatePollen {
-    pub name: String,
+    pub polen_name: String,
     pub level_numeric: i8,
     pub level_text: &'static str,
     pub trend_value: &'static str,
@@ -27,7 +27,7 @@ impl From<&Pollen> for StatePollen {
         };
 
         StatePollen {
-            name: value.name.clone(),
+            polen_name: value.name.clone(),
             level_numeric,
             level_text,
             trend_value,
@@ -39,7 +39,7 @@ impl From<&Pollen> for StatePollen {
 impl StatePollen {
     fn none(name: String) -> Self {
         StatePollen {
-            name,
+            polen_name: name,
             level_numeric: 0,
             level_text: "brak",
             trend_value: "same",
