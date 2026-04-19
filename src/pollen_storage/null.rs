@@ -1,6 +1,7 @@
 use bimap::BiMap;
 use crate::pollen_storage::{PollenIdToNameMap, PollenStorage};
 
+#[allow(dead_code)]
 pub struct NullPollenStorage;
 
 impl PollenStorage for NullPollenStorage {

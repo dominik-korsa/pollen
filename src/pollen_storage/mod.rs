@@ -18,5 +18,6 @@ pub fn generate_id_for_name(name: &str) -> String {
     slugify!(name, separator = "_")
 }
 
+#[allow(unused_imports)]
 pub use null::NullPollenStorage;
 pub use file::FilePollenStorage;

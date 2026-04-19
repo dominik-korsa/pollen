@@ -2,6 +2,8 @@ use std::time::Duration;
 use rand::distr::Alphanumeric;
 use rand::{Rng, RngExt};
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
+use rumqttc::ConnectionError::MqttState;
+use rumqttc::StateError::ConnectionAborted;
 use serde::Serialize;
 use serde_json::json;
 use crate::publisher::Publisher;
@@ -49,7 +51,7 @@ impl MqttPublisher {
         Self { mqtt_options }
     }
 
-    fn consume(sent_message_count: i32, client: Client, mut connection: Connection) -> Result<(), rumqttc::ClientError> {
+    fn consume(sent_message_count: i32, client: Client, mut connection: Connection) -> Result<(), Box<dyn std::error::Error>> {
         let mut remaining_acks = sent_message_count;
 
         for notification in connection.iter() {
@@ -61,9 +63,11 @@ impl MqttPublisher {
                         client.disconnect()?;
                     }
                 }
-                Err(e) => {
-                    println!("Connection closed: {:?}", e);
+                Err(MqttState(ConnectionAborted)) => {
                     break;
+                }
+                Err(e) => {
+                    return Err(e.into());
                 }
                 _ => {}
             }
@@ -74,7 +78,7 @@ impl MqttPublisher {
 }
 
 impl Publisher for MqttPublisher {
-    fn publish(&self, state: &State) -> Result<(), rumqttc::ClientError> {
+    fn publish(&self, state: &State) -> Result<(), Box<dyn std::error::Error>> {
         let mut sent_message_count = 0;
         let state_topic = "pollen/cm_uj/state";
 

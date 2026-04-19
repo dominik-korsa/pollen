@@ -37,7 +37,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let report = data_source.get_report()?;
-    println!("{:?}", report);
 
     let state = state_serializer.create_state(report)?;
 
