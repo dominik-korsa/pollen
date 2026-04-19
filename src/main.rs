@@ -1,15 +1,17 @@
 use std::fs;
 use clap::Parser;
 use crate::config::Config;
+
+use publisher::mqtt::MqttPublisher;
 use crate::data_source::cm_uj::HttpHtmlFetcher;
 use crate::data_source::DataSource;
-use crate::mqtt_publisher::MqttPublisher;
-use crate::publisher::{Publisher, State};
+use crate::publisher::Publisher;
 
 mod data_source;
-pub mod publisher;
-mod mqtt_publisher;
+mod publisher;
 mod config;
+mod state;
+mod pollen_storage;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::parse();
@@ -20,6 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data_source = data_source::cm_uj::CmUjDataSource::new(
         fetcher
     );
+    let pollen_storage = pollen_storage::null::NullPollenStorage;
+    let state_serializer = state::StateSerializer::new(pollen_storage);
 
     let publisher = MqttPublisher::new(
         config.mqtt_host,
@@ -33,9 +37,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let report = data_source.get_report()?;
     println!("{:?}", report);
 
-    let state = State {
-        metadata: report.metadata,
-    };
+    let state = state_serializer.create_state(report)?;
+
     publisher.publish(&state)?;
 
     Ok(())

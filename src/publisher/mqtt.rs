@@ -2,7 +2,8 @@ use std::time::Duration;
 use rand::distr::Alphanumeric;
 use rand::{Rng, RngExt};
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS};
-use crate::publisher::{Publisher, State};
+use crate::publisher::Publisher;
+use crate::state::State;
 
 pub struct MqttPublisher {
     mqtt_options: MqttOptions,
@@ -54,7 +55,7 @@ impl Publisher for MqttPublisher {
     fn publish(&self, state: &State) -> Result<(), rumqttc::ClientError> {
         let mut sent_message_count = 0;
 
-        let (client, connection) = Client::new(self.mqtt_options.clone(), 10);
+        let (client, connection) = Client::new(self.mqtt_options.clone(), 256);
         client.publish(
             "pollen/cm_uj/state",
             QoS::AtLeastOnce,

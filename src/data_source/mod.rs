@@ -1,4 +1,4 @@
-use serde::{Serialize, Serializer};
+use serde::Serialize;
 
 pub mod cm_uj;
 
@@ -17,10 +17,10 @@ pub enum Trend {
 }
 
 #[derive(Debug)]
-pub  struct Pollen {
-    name: String,
-    level: PollenLevel,
-    trend: Trend,
+pub struct Pollen {
+    pub name: String,
+    pub level: PollenLevel,
+    pub trend: Trend,
 }
 
 #[derive(Debug, Serialize)]
