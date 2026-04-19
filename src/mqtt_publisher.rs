@@ -21,7 +21,7 @@ impl MqttPublisher {
     pub fn new(host: String, port: u16, username: String, password: String) -> Self {
         let client_id = Self::generate_client_id(rand::rng());
         let mut mqtt_options = MqttOptions::new(&client_id, host, port);
-        // mqtt_options.set_credentials(username, password);
+        mqtt_options.set_credentials(username, password);
         mqtt_options.set_keep_alive(Duration::from_secs(5));
         Self { mqtt_options }
     }
@@ -56,7 +56,7 @@ impl Publisher for MqttPublisher {
 
         let (client, connection) = Client::new(self.mqtt_options.clone(), 10);
         client.publish(
-            "pollen_cm_uj",
+            "pollen/cm_uj/state",
             QoS::AtLeastOnce,
             true,
             serde_json::to_vec(state).expect("Failed to serialize state")

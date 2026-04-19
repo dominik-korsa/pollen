@@ -1,3 +1,6 @@
+use std::fs;
+use clap::Parser;
+use crate::config::Config;
 use crate::data_source::cm_uj::HttpHtmlFetcher;
 use crate::data_source::DataSource;
 use crate::mqtt_publisher::MqttPublisher;
@@ -6,8 +9,11 @@ use crate::publisher::{Publisher, State};
 mod data_source;
 pub mod publisher;
 mod mqtt_publisher;
+mod config;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = Config::parse();
+
     let fetcher = Box::new(HttpHtmlFetcher::new(
         "https://toksy-alergo.cm-uj.krakow.pl/pl/komunikat-pylkowy-dla-alergikow-malopolska/".to_string()
     ));
@@ -16,10 +22,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let publisher = MqttPublisher::new(
-        "test.mosquitto.org".to_string(),
-        1883,
-        "test".to_string(),
-        "test".to_string()
+        config.mqtt_host,
+        config.mqtt_port,
+        config.username,
+        fs::read_to_string(config.password_file)?
+            .trim()
+            .to_string(),
     );
 
     let report = data_source.get_report()?;
