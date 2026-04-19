@@ -137,7 +137,7 @@ impl Publisher for MqttPublisher {
         for (id, pollen) in state.pollen.iter() {
             let sensor_id = format!("pollen_cm_uj_pollen_{}", id);
             let pollen_config = SensorConfig {
-                name: format!("Stężenie {}", pollen.polen_name),
+                name: format!("Stężenie {}", pollen.pollen_name),
                 unique_id: sensor_id.clone(),
                 object_id: sensor_id,
                 state_topic,
