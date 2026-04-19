@@ -2,6 +2,8 @@
 name = "pollen"
 version = "0.1.0"
 edition = "2024"
+description = "Pollen report scrapper which publishes the results to MQTT for use with Home Assistant"
+license = "AGPL-3"
 
 [dependencies]
 htmd = "0.5.4"
