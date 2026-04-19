@@ -1,3 +1,5 @@
+use serde::{Serialize, Serializer};
+
 pub mod cm_uj;
 
 #[derive(Debug)]
@@ -14,7 +16,6 @@ pub enum Trend {
     Same,
 }
 
-
 #[derive(Debug)]
 pub  struct Pollen {
     name: String,
@@ -22,13 +23,18 @@ pub  struct Pollen {
     trend: Trend,
 }
 
-#[derive(Debug)]
-pub  struct PollenReport {
+#[derive(Debug, Serialize)]
+pub struct PollenReportMetadata {
     /// Report date in the ISO 8601 format (YYYY-MM-DD).
     date: Option<String>,
     /// Text description of the report as Markdown.
     description: String,
-    pollen_list: Vec<Pollen>,
+}
+
+#[derive(Debug)]
+pub struct PollenReport {
+    pub metadata: PollenReportMetadata,
+    pub pollen_list: Vec<Pollen>,
 }
 
 pub trait DataSource {

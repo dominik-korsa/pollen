@@ -3,7 +3,7 @@ use htmd::HtmlToMarkdown;
 use itertools::Itertools;
 use scraper::{ElementRef, Html, Selector};
 use regex::Regex;
-use crate::data_source::{DataSource, Pollen, PollenLevel, PollenReport, Trend};
+use crate::data_source::{DataSource, Pollen, PollenLevel, PollenReport, PollenReportMetadata, Trend};
 
 pub trait HtmlFetcher {
     fn fetch(&self) -> Result<String, Box<dyn std::error::Error>>;
@@ -130,8 +130,10 @@ impl DataSource for CmUjDataSource {
         let pollen_list = self.extract_pollen_list(content)?;
 
         Ok(PollenReport {
-            date,
-            description,
+            metadata: PollenReportMetadata {
+                date,
+                description,
+            },
             pollen_list,
         })
     }
