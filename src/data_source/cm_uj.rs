@@ -1,8 +1,9 @@
 use std::io;
 use htmd::HtmlToMarkdown;
+use itertools::Itertools;
 use scraper::{ElementRef, Html, Selector};
 use regex::Regex;
-use crate::data_source::{DataSource, Pollen, PollenReport};
+use crate::data_source::{DataSource, Pollen, PollenLevel, PollenReport, Trend};
 
 pub trait HtmlFetcher {
     fn fetch(&self) -> Result<String, Box<dyn std::error::Error>>;
@@ -32,6 +33,8 @@ pub struct CmUjDataSource {
     date_selector: Selector,
     date_regex: Regex,
     markdown_converter: HtmlToMarkdown,
+    table_selector: Selector,
+    table_row_selector: Selector,
 }
 
 impl CmUjDataSource {
@@ -44,18 +47,27 @@ impl CmUjDataSource {
             .skip_tags(vec!["table"])
             .build();
 
+        let table_selector = Selector::parse("div.table-responsive > table.table").unwrap();
+        let table_row_selector = Selector::parse("tr:not(:first-child)").unwrap();
+
         Self {
             fetcher,
             content_selector,
             date_selector,
             date_regex,
             markdown_converter,
+            table_selector,
+            table_row_selector,
         }
+    }
+
+    fn text_of(element: ElementRef) -> String {
+        element.text().collect::<String>().trim().to_string()
     }
 
     fn extract_date(&self, content: ElementRef) -> Option<String> {
         content.select(&self.date_selector)
-            .map(|el| el.text().collect::<String>().trim().to_string())
+            .map(|el| Self::text_of(el))
             .filter(|date| self.date_regex.is_match(date))
             .next()
     }
@@ -64,8 +76,43 @@ impl CmUjDataSource {
         self.markdown_converter.convert(&content.inner_html())
     }
 
-    fn extract_pollen_list(&self) -> Vec<Pollen> {
-        vec![] // TODO: Implement
+    fn map_row(&self, row: ElementRef) -> io::Result<Pollen> {
+        let (name, level, trend) = row.children()
+            .filter_map(ElementRef::wrap)
+            .map(|el| Self::text_of(el))
+            .collect_tuple()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Invalid number of row children"))?;
+
+        let level: PollenLevel = match level.as_str() {
+            "stężenie niskie" => PollenLevel::Low,
+            "stężenie średnie" => PollenLevel::Medium,
+            "stężenie wysokie" => PollenLevel::High,
+            _ => return Err(io::Error::new(io::ErrorKind::Other, format!("Invalid pollen level {level}")).into()),
+        };
+        let trend: Trend = match trend.as_str() {
+            "spadek" => Trend::Down,
+            "wzrost" => Trend::Up,
+            "bez zmian" => Trend::Same,
+            _ => return Err(io::Error::new(io::ErrorKind::Other, format!("Invalid pollen trend {trend}")).into()),
+        };
+
+        Ok(Pollen {
+            name,
+            level,
+            trend,
+        })
+    }
+
+    fn extract_pollen_list(&self, content: ElementRef) -> io::Result<Vec<Pollen>> {
+        let Some(table) = content.select(&self.table_selector).next() else {
+            return Err(io::Error::new(io::ErrorKind::Other, "Table not found").into());
+        };
+
+        let pollen_vec: io::Result<Vec<Pollen>> = table
+            .select(&self.table_row_selector)
+            .map(|row| self.map_row(row))
+            .collect();
+        pollen_vec
     }
 }
 
@@ -80,7 +127,7 @@ impl DataSource for CmUjDataSource {
 
         let date = self.extract_date(content);
         let description = self.extract_description(content)?;
-        let pollen_list = self.extract_pollen_list();
+        let pollen_list = self.extract_pollen_list(content)?;
 
         Ok(PollenReport {
             date,
